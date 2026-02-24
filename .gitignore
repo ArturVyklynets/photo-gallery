@@ -1,0 +1,41 @@
+# ======================
+# BACKEND
+# ======================
+
+# Environment variables
+backend/.env
+
+# Python virtual environment
+backend/venv/
+
+# Uploaded files
+backend/uploads/
+
+# Python cache
+backend/__pycache__/
+backend/**/*.pyc
+
+# ======================
+# FRONTEND
+# ======================
+
+# Node modules
+frontend/node_modules/
+
+# Build folders (Vite)
+frontend/dist/
+
+# Logs
+frontend/*.log
+
+# ======================
+# GLOBAL
+# ======================
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
