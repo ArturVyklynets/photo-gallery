@@ -12,7 +12,7 @@ import uuid
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
-ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"}
 
 @router.get("/", response_model=List[PhotoResponse])
 def get_photos(
