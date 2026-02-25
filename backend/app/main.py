@@ -12,6 +12,7 @@ app = FastAPI(title="Photo Album API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://photo-gallery-blue-six.vercel.app",
         "https://photo-gallery-4oqrozfb0-arturvyklynets-projects.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
