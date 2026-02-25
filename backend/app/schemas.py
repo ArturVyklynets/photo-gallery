@@ -38,3 +38,10 @@ class PhotoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ShareRequest(BaseModel):
+    email: EmailStr
+
+class ShareFolderRequest(BaseModel):
+    email: EmailStr
+    can_delete: bool = False

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
@@ -24,7 +24,7 @@ class Folder(Base):
     id         = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name       = Column(String, nullable=False)
     user_id    = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    parent_id  = Column(UUID(as_uuid=True), ForeignKey("folders.id"), nullable=True)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("folders.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user     = relationship("User", back_populates="folders")
@@ -42,8 +42,27 @@ class Photo(Base):
     size       = Column(Integer)
     mime_type  = Column(String)
     user_id    = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    folder_id  = Column(UUID(as_uuid=True), ForeignKey("folders.id"), nullable=True)
+    folder_id = Column(UUID(as_uuid=True), ForeignKey("folders.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user   = relationship("User", back_populates="photos")
     folder = relationship("Folder", back_populates="photos")
+
+
+class SharedPhoto(Base):
+    __tablename__ = "shared_photos"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    photo_id = Column(UUID(as_uuid=True), ForeignKey("photos.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SharedFolder(Base):
+    __tablename__ = "shared_folders"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    folder_id = Column(UUID(as_uuid=True), ForeignKey("folders.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    can_delete = Column(Boolean, default=False) 
+    created_at = Column(DateTime, default=datetime.utcnow)
