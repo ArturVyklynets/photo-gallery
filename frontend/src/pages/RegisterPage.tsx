@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../api/client'
+import logo from '../assets/LogoPhotoAlbum.png'
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -28,56 +29,92 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Реєстрація</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#F2F3F5] font-sans px-4">
+      <div className="bg-white p-10 rounded-[20px] w-full max-w-[400px] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        
+        <div className="text-center mb-8">
+          <div className="rounded-xl mx-auto mb-4 flex items-center justify-center text-white font-bold text-xl">
+            <img 
+              src={logo} 
+              alt="PhotoAlbum Logo" 
+              className="h-10 w-auto object-contain" 
+            />
+          </div>
+          <h2 className="font-bold text-2xl text-gray-900">Реєстрація</h2>
+          <p className="text-[#6B7280] text-sm mt-2">Створіть акаунт для доступу до галереї</p>
+        </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm text-center">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="text"
-            placeholder="Ім'я"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            required
-          />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          
+          <div>
+            <label className="text-[0.75rem] font-bold text-[#6B7280] mb-1.5 block tracking-[0.05em]">
+              FULL NAME
+            </label>
+            <input
+              type="text"
+              placeholder="John Doe"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full bg-[#F9FAFB] border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-[#F76808] focus:bg-white outline-none py-3 px-4 transition-all"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-[0.75rem] font-bold text-[#6B7280] mb-1.5 block tracking-[0.05em]">
+              EMAIL ADDRESS
+            </label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full bg-[#F9FAFB] border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-[#F76808] focus:bg-white outline-none py-3 px-4 transition-all"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="text-[0.75rem] font-bold text-[#6B7280] mb-1.5 block tracking-[0.05em]">
+              PASSWORD
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full bg-[#F9FAFB] border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-[#F76808] focus:bg-white outline-none py-3 px-4 transition-all"
+              required
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            className="w-full bg-[#F76808] hover:bg-[#E55B00] text-white font-medium py-3 rounded-xl transition-colors mt-2 disabled:opacity-50 flex justify-center items-center shadow-sm"
           >
             {loading ? 'Завантаження...' : 'Зареєструватись'}
           </button>
         </form>
 
-        <p className="text-center text-gray-500 mt-4">
-          Вже є акаунт?{' '}
-          <Link to="/login" className="text-indigo-600 hover:underline">
-            Увійти
+        <div className="mt-8 text-center flex flex-col gap-4">
+          <p className="text-sm text-[#6B7280]">
+            Вже є акаунт?{' '}
+            <Link to="/login" className="text-[#F76808] font-bold hover:underline">
+              Увійти
+            </Link>
+          </p>
+          <Link to="/" className="text-sm text-[#6B7280] hover:text-gray-900 transition-colors">
+            ← На головну
           </Link>
-        </p>
+        </div>
+
       </div>
     </div>
   )

@@ -75,29 +75,59 @@ def create_folder(
     db.refresh(folder)
     return folder
 
-def delete_folder_contents_from_s3(folder_id: UUID, db: Session):
-    """Рекурсивно видаляє всі фото з S3 для папки та всіх її підпапок"""
+def delete_folder_recursively(folder_id: UUID, db: Session):
+    """Рекурсивно видаляє всі файли з S3 та записи з БД (фото і підпапки)"""
     photos = db.query(Photo).filter(Photo.folder_id == folder_id).all()
     for photo in photos:
         delete_from_s3(photo.s3_key)
+        db.delete(photo)
 
     subfolders = db.query(Folder).filter(Folder.parent_id == folder_id).all()
     for subfolder in subfolders:
-        delete_folder_contents_from_s3(subfolder.id, db)
+        delete_folder_recursively(subfolder.id, db)
+
+    folder = db.query(Folder).filter(Folder.id == folder_id).first()
+    if folder:
+        db.delete(folder)
 
 @router.delete("/{folder_id}")
 def delete_folder(
     folder_id: UUID,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     folder = db.query(Folder).filter(Folder.id == folder_id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Папку не знайдено")
 
-    delete_folder_contents_from_s3(folder_id, db)
+    has_permission = False
 
-    db.delete(folder)
+    if folder.user_id == current_user.id:
+        has_permission = True
+    else:
+        current_check_folder = folder
+        while current_check_folder.parent_id:
+            shared_link = db.query(SharedFolder).filter(
+                SharedFolder.folder_id == current_check_folder.parent_id,
+                SharedFolder.user_id == current_user.id
+            ).first()
+            
+            if shared_link and shared_link.can_delete:
+                has_permission = True
+                break
+                
+            current_check_folder = db.query(Folder).filter(Folder.id == current_check_folder.parent_id).first()
+            if not current_check_folder:
+                break
+
+    if not has_permission:
+        raise HTTPException(status_code=403, detail="У вас немає прав на видалення цієї папки")
+
+    delete_folder_recursively(folder_id, db)
+    
     db.commit()
-    return {"message": "Папку та весь її вміст видалено"}
+    
+    return {"message": "Папку та весь її вміст успішно видалено"}
 
 @router.get("/shared", response_model=List[FolderResponse])
 def get_shared_folders(
