@@ -4,7 +4,7 @@ from uuid import UUID
 from typing import List, Optional
 from ..database import get_db
 from ..models import Folder, Photo, SharedFolder, SharedPhoto, User
-from ..schemas import PhotoResponse, ShareRequest
+from ..schemas import PhotoResponse, PhotoUpdate, ShareRequest
 from ..dependencies import get_current_user
 from ..services.s3 import upload_to_s3, get_presigned_url, delete_from_s3
 from ..services.email import send_photo_notification_email
@@ -17,10 +17,18 @@ ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/he
 @router.get("/", response_model=List[PhotoResponse])
 def get_photos(
     folder_id: Optional[UUID] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    if folder_id is None:
+    
+    if search:
+            photos = db.query(Photo).filter(
+                Photo.user_id == user.id,
+                Photo.filename.ilike(f"%{search}%")
+            ).all()
+
+    elif folder_id is None:
         photos = db.query(Photo).filter(
             Photo.user_id == user.id,
             Photo.folder_id == None
@@ -55,6 +63,7 @@ def get_photos(
             url=get_presigned_url(photo.s3_key),
             folder_id=photo.folder_id,
             created_at=photo.created_at,
+            size=photo.size
         ))
     return result
 
@@ -205,6 +214,47 @@ def get_shared_photos(
             url=get_presigned_url(photo.s3_key),
             folder_id=photo.folder_id,
             created_at=photo.created_at,
+            size=photo.size
         ))
         
     return result
+
+
+@router.get("/{photo_id}/shared-users", response_model=List[dict])
+def get_photo_shared_users(
+    photo_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    photo = db.query(Photo).filter(Photo.id == photo_id, Photo.user_id == current_user.id).first()
+    if not photo:
+        raise HTTPException(status_code=403, detail="Ви не є власником цього фото")
+
+    shared_records = db.query(SharedPhoto).filter(SharedPhoto.photo_id == photo_id).all()
+    
+    users_with_access = []
+    for record in shared_records:
+        user = db.query(User).filter(User.id == record.user_id).first()
+        if user:
+            users_with_access.append({
+                "email": user.email,
+                "name": user.name if hasattr(user, 'name') else user.email.split('@')[0],
+                "can_delete": False
+            })
+            
+    return users_with_access
+
+@router.patch("/{photo_id}")
+def rename_photo(
+    photo_id: UUID, 
+    photo_data: PhotoUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    photo = db.query(Photo).filter(Photo.id == photo_id, Photo.user_id == current_user.id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Фото не знайдено або у вас немає прав")
+    
+    photo.filename = photo_data.filename
+    db.commit()
+    return {"message": "Назву успішно змінено"}

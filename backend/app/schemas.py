@@ -35,6 +35,7 @@ class PhotoResponse(BaseModel):
     url: str
     folder_id: Optional[UUID]
     created_at: datetime
+    size: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -45,3 +46,9 @@ class ShareRequest(BaseModel):
 class ShareFolderRequest(BaseModel):
     email: EmailStr
     can_delete: bool = False
+
+class FolderUpdate(BaseModel):
+    name: str
+
+class PhotoUpdate(BaseModel):
+    filename: str

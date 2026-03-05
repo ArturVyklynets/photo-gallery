@@ -6,7 +6,7 @@ from typing import List, Optional
 from ..services.s3 import delete_from_s3
 from ..database import get_db
 from ..models import Folder, Photo, SharedFolder, User
-from ..schemas import FolderCreate, FolderResponse, ShareFolderRequest
+from ..schemas import FolderCreate, FolderResponse, FolderUpdate, ShareFolderRequest
 from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/folders", tags=["folders"])
@@ -14,9 +14,18 @@ router = APIRouter(prefix="/folders", tags=["folders"])
 @router.get("/", response_model=List[FolderResponse])
 def get_folders(
     parent_id: Optional[UUID] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    
+    if search:
+        folders = db.query(Folder).filter(
+            Folder.user_id == current_user.id,
+            Folder.name.ilike(f"%{search}%")
+        ).all()
+        return folders
+
     if parent_id is None:
         folders = db.query(Folder).filter(
             Folder.user_id == current_user.id,
@@ -181,3 +190,43 @@ def share_folder(
     db.commit()
 
     return {"message": f"Папку успішно поширено для {target_user.email}"}
+
+
+@router.get("/{folder_id}/shared-users", response_model=List[dict])
+def get_folder_shared_users(
+    folder_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    folder = db.query(Folder).filter(Folder.id == folder_id, Folder.user_id == current_user.id).first()
+    if not folder:
+        raise HTTPException(status_code=403, detail="Ви не є власником цієї папки")
+
+    shared_records = db.query(SharedFolder).filter(SharedFolder.folder_id == folder_id).all()
+    
+    users_with_access = []
+    for record in shared_records:
+        user = db.query(User).filter(User.id == record.user_id).first()
+        if user:
+            users_with_access.append({
+                "email": user.email,
+                "name": user.name if hasattr(user, 'name') else user.email.split('@')[0],
+                "can_delete": record.can_delete
+            })
+            
+    return users_with_access
+
+@router.patch("/{folder_id}")
+def rename_folder(
+    folder_id: UUID, 
+    folder_data: FolderUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    folder = db.query(Folder).filter(Folder.id == folder_id, Folder.user_id == current_user.id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Папку не знайдено або у вас немає прав")
+    
+    folder.name = folder_data.name
+    db.commit()
+    return {"message": "Назву успішно змінено"}

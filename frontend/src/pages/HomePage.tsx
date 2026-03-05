@@ -37,7 +37,7 @@ const HomePage = () => {
             <>
               <Link
                 to="/album"
-                className="px-4 py-2 text-indigo-600 font-medium hover:underline"
+                className="px-4 py-2 font-medium hover:bg-orange-100 rounded-lg"
               >
                 Мій альбом
               </Link>
@@ -78,13 +78,15 @@ const HomePage = () => {
           Надійне хмарне зберігання для ваших фото з розширеними можливостями доступу та зручною організацією.
         </p>
         <div className="flex gap-4 justify-center">
-          <Link
-            to="/register"
-            className="px-8 py-3 bg-orange-500 text-white text-lg rounded-xl hover:bg-orange-600"
-            
-          >
-            Почати безкоштовно
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              to="/register"
+              className="px-8 py-3 bg-orange-500 text-white text-lg rounded-xl hover:bg-orange-600"
+              
+            >
+              Почати безкоштовно
+            </Link>
+          )}
         </div>
       </div>
 
